@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Find Gurudev</title>
+    <style>
+        /* Reset some default styles */
+        body, h1, p {
+            margin: 0;
+            padding: 0;
+        }
+
+        /* Define styles for the container */
+        .container {
+            background-color: #f5f5f5; /* Light gray background */
+            text-align: center;
+            padding: 20px;
+            font-family: Arial, sans-serif;
+        }
+
+        /* Style the image */
+        img {
+            max-width: 100%;
+            height: auto;
+            border-radius: 50%; /* Rounded image */
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.2); /* Shadow effect */
+        }
+
+        /* Style the heading */
+        h1 {
+            color: #333; /* Dark text color */
+            font-size: 28px;
+            margin-top: 20px;
+        }
+
+        /* Style the paragraph */
+        p {
+            color: #666; /* Gray text color */
+            font-size: 18px;
+            margin-top: 10px;
+        }
+
+        /* Style the event info */
+        #eventInfo {
+            background-color: #fff; /* White background */
+            border-radius: 10px;
+            padding: 20px;
+            margin-top: 20px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+        }
+
+        /* Style the location */
+        #location {
+            color: #ff6600; /* Orange text color */
+            font-size: 24px;
+            font-weight: bold;
+        }
+
+        /* Style the date */
+        #date {
+            color: #333; /* Dark text color */
+            font-size: 20px;
+            margin-top: 10px;
+        }
+
+        /* Center the event info */
+        #eventInfo {
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <img src="https://w0.peakpx.com/wallpaper/814/73/HD-wallpaper-sri-sri-aol-art-of-living-guru-gurudev-sri-sri-ravishankar.jpg" alt="Sri Sri Ravi Shankar" height="200px">
+        <h1>Welcome to Find Gurudev</h1>
+        <p>Gurudev is at the following location:</p>
+        <div id="eventInfo">
+            <div id="location">{{ current_location }}</div>
+            <div id="date">{{ current_event_date }}</div>
+            <div id="location">{{ current_event }}</div>
+            <div id="location">{{ location }}</div>
+            <div id="location">{{ full_location }}</div>
+        </div>
+    </div>
+</body>
+</html>
