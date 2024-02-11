@@ -26,19 +26,40 @@ def get_current_or_latest_past_event_location(calendar_url):
             current_event_date = None
 
             # Iterate through events to find the current day's event or the latest past event
-            for event in c.events:
-                event_date = event.begin.date()
-                if event_date == current_date:
-                    current_event = event.name
-                    current_location = event.location
-                    current_event_date = event_date
-                    break  # Stop after finding the first event for the current day
-                elif event_date < current_date:
-                    current_event = event.name
-                    current_location = event.location
-                    current_event_date = event_date
+            # print(c)
 
-            return current_event, current_location, current_event_date
+            closest_future_event = None
+            closest_future_date_diff = None
+            future_event_flag = False
+
+            for event in c.events:
+                print('in an event', event)
+                print('in an event.begin', event.begin.date())
+                print('in an event.end', event.end.date())
+                print('in an event.check', current_date > event.begin.date())
+                event_date = event.begin.date()
+                event_end_date = event.end.date()
+                if event_date == current_date or (event_date <= current_date and current_date <= event_end_date):
+                    current_event = event.name
+                    current_location = event.location
+                    current_event_date = current_date
+                    future_event_flag = False
+                    print('Found date within event')
+                    break  # Stop after finding the first event for the current day
+                elif event_date > current_date:
+                    date_diff = (event_date - current_date).days
+                    if closest_future_event is None or date_diff < closest_future_date_diff:
+                        closest_future_event = event
+                        closest_future_date_diff = date_diff
+                        future_event_flag = True
+                        print('Found closer future event')
+
+            # If a current event within or spanning the current date wasn't found, but a future event was:
+            if closest_future_event and current_event is None:
+                current_event = closest_future_event.name
+                current_location = closest_future_event.location
+                current_event_date = closest_future_event.begin.date()
+            return current_event, current_location, current_event_date, future_event_flag
 
     except Exception as e:
         print("An error occurred:", str(e))
@@ -63,9 +84,9 @@ def split_into_main_and_full(input_string):
 
 @app.route('/')
 def index():
-    current_event, current_location, current_event_date = get_current_or_latest_past_event_location(calendar_url)
+    current_event, current_location, current_event_date, future_event_flag = get_current_or_latest_past_event_location(calendar_url)
     main_string, full_string = split_into_main_and_full(current_location)
-    return render_template('front.html', current_event=current_event, current_location=current_location, current_event_date=current_event_date, location=main_string, full_location=full_string)
+    return render_template('refreshed-main.html', current_event=current_event, current_location=current_location, current_event_date=current_event_date, location=main_string, full_location=full_string, future_event_flag=future_event_flag)
 
 @app.route('/api/event_info')
 def api_event_info():
