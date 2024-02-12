@@ -1,14 +1,40 @@
 from flask import Flask, jsonify, render_template
 import requests
 from ics import Calendar
-from datetime import datetime
+from datetime import datetime, timedelta
+import threading
 
 app = Flask(__name__)
+
+# Global variable to store the last fetch time
+last_fetch_time = None
+
+# A lock to prevent concurrent data fetches in a multithreaded environment
+fetch_lock = threading.Lock()
 
 # Replace the URL with the calendar URL you provided
 calendar_url = "https://www.srisriravishankar.org/?post_type=tribe_events&ical=1&eventDisplay=list"
 
-def get_current_or_latest_past_event_location(calendar_url):
+def split_into_main_and_full(input_string):
+    # Split the string into parts, trying to split into three parts from the right
+    parts = input_string.rsplit(',', 3)
+    
+    # If there are less than three parts, then the whole input string is the main_string
+    if len(parts) <= 3:
+        city_and_country = input_string
+    else:
+        # Otherwise, the last three parts are joined to form the main_string
+        city_and_country = ', '.join(parts[-3:])
+    
+    # The full_string is the original string
+    full_address = input_string
+    
+    return city_and_country, full_address
+
+
+def build_calendar_events():
+    print('Building Events')
+    calendar_events = []
     try:
         # Fetch the calendar data from the URL
         response = requests.get(calendar_url)
@@ -18,85 +44,83 @@ def get_current_or_latest_past_event_location(calendar_url):
             ical_text = response.text
             c = Calendar(ical_text)
 
-            # Get the current date
-            current_date = datetime.now().date()
-
-            current_event = None
-            current_location = None
-            current_event_date = None
-
-            # Iterate through events to find the current day's event or the latest past event
-            # print(c)
-
-            closest_future_event = None
-            closest_future_date_diff = None
-            future_event_flag = False
-
             for event in c.events:
-                print('in an event', event)
-                print('in an event.begin', event.begin.date())
-                print('in an event.end', event.end.date())
-                print('in an event.check', current_date > event.begin.date())
                 event_date = event.begin.date()
                 event_end_date = event.end.date()
-                if event_date == current_date or (event_date <= current_date and current_date <= event_end_date):
-                    current_event = event.name
-                    current_location = event.location
-                    current_event_date = current_date
-                    future_event_flag = False
-                    print('Found date within event')
-                    break  # Stop after finding the first event for the current day
-                elif event_date > current_date:
-                    date_diff = (event_date - current_date).days
-                    if closest_future_event is None or date_diff < closest_future_date_diff:
-                        closest_future_event = event
-                        closest_future_date_diff = date_diff
-                        future_event_flag = True
-                        print('Found closer future event')
-
-            # If a current event within or spanning the current date wasn't found, but a future event was:
-            if closest_future_event and current_event is None:
-                current_event = closest_future_event.name
-                current_location = closest_future_event.location
-                current_event_date = closest_future_event.begin.date()
-            return current_event, current_location, current_event_date, future_event_flag
-
+                city_and_country, full_address = split_into_main_and_full(event.location)
+                calendar_events.append({ 'name': event.name,
+                                         'address': full_address, 
+                                         'city': city_and_country, 
+                                         'begin': event.begin.date(), 
+                                         'end': event.end.date() })
+        calendar_events = sorted(calendar_events, key=lambda x: x['begin'])
     except Exception as e:
         print("An error occurred:", str(e))
+    
+    return calendar_events
 
-    return None, None, None
+events = build_calendar_events()
 
-def split_into_main_and_full(input_string):
-    # Split the string into parts, trying to split into three parts from the right
-    parts = input_string.rsplit(',', 3)
-    
-    # If there are less than three parts, then the whole input string is the main_string
-    if len(parts) <= 3:
-        main_string = input_string
-    else:
-        # Otherwise, the last three parts are joined to form the main_string
-        main_string = ', '.join(parts[-3:])
-    
-    # The full_string is the original string
-    full_string = input_string
-    
-    return main_string, full_string
+def rebuild_events_cache(): 
+    global events
+    events = build_calendar_events()
+
+def get_events_to_show(date_to_check):
+    main_event = None
+    upcoming_events = []
+    current_date = datetime.now().date()
+    date_to_check_main_event_for = current_date
+    found_main_event = False
+
+    for event in events:
+        if not found_main_event and (event['begin'] <= date_to_check_main_event_for and date_to_check_main_event_for <= event['end']):
+            main_event = {
+                'name': event['name'],
+                'address': event['address'],
+                'city': event['city'],
+                'begin': event['begin'].strftime('%B %d, %Y'),
+                'is_future': False
+            }
+            found_main_event = True
+        elif not found_main_event and (date_to_check_main_event_for > event['begin'] and date_to_check_main_event_for > event['end']):
+            main_event = {
+                'name': event['name'],
+                'address': event['address'],
+                'city': event['city'],
+                'begin': event['begin'].strftime('%B %d %Y'),
+                'is_future': True
+            }
+            found_main_event = True
+        elif found_main_event and len(upcoming_events) < 3:
+            upcoming_events.append({
+                'name': event['name'],
+                'address': event['address'],
+                'city': event['city'],
+                'begin': event['begin'].strftime('%B %d, %Y')
+            })
+    return { 'main_event': main_event, 'upcoming_events': upcoming_events }
+
+def fetch_data():
+    rebuild_events_cache()
+    print("Built Cache at", datetime.now())
+    # Simulate data fetching
+    global last_fetch_time
+    last_fetch_time = datetime.now()
+
+@app.before_request
+def before_request():
+    global last_fetch_time
+    with fetch_lock:
+        # Check if we need to fetch new data
+        if last_fetch_time is None or (datetime.now() - last_fetch_time) > timedelta(minutes=30):
+            fetch_data()
+            print("Rebuilt the cache...")
+
 
 @app.route('/')
 def index():
-    current_event, current_location, current_event_date, future_event_flag = get_current_or_latest_past_event_location(calendar_url)
-    main_string, full_string = split_into_main_and_full(current_location)
-    return render_template('refreshed-main.html', current_event=current_event, current_location=current_location, current_event_date=current_event_date, location=main_string, full_location=full_string, future_event_flag=future_event_flag)
-
-@app.route('/api/event_info')
-def api_event_info():
-    current_event, current_location, current_event_date = get_current_or_latest_past_event_location(calendar_url)
-    response_data = {
-        'event': current_event,
-        'location': current_location,
-        'event_date': str(current_event_date) if current_event_date else None
-    }
-    return jsonify(response_data)
+    events_data = get_events_to_show(None)
+    return render_template('refreshed-main.html', events_data=events_data)
 
 # if __name__ == '__main__':
-#     app.run(host='0.0.0.0', port=80)
+#     app.run(host='0.0.0.0', port=81, debug=True)

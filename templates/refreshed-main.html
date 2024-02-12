@@ -1,6 +1,5 @@
 <!DOCTYPE html>
 <html lang="en">
-
     <head>
         <meta charset="UTF-8">
         <meta http-equiv="X-UA-Compatible" content="IE=edge">
@@ -15,6 +14,16 @@
         <script src="https://cdnjs.cloudflare.com/ajax/libs/feather-icons/4.28.0/feather.min.js" integrity="sha512-7x3zila4t2qNycrtZ31HO0NnJr8kg2VI67YLoRSyi9hGhRN66FHYWr7Axa9Y1J9tGYHVBPqIjSE1ogHrJTz51g==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
     </head>
 
+    <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-G04C3QG5ND"></script>
+    <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+
+    gtag('config', 'G-G04C3QG5ND');
+    </script>
+
     <body class="bg-red-245 md:bg-green-245 lg:bg-blue-220">
         
         <section class="py-10 md:py-4">
@@ -24,7 +33,7 @@
                 <nav class="flex items-center justify-between mb-4">
                     <img src="{{ url_for('static', filename='logo.png') }}" alt="Logo" class="w-1/4">
 
-                    <button class="px-7 py-3 md:px-9 md:py-4 bg-white font-medium md:font-semibold text-gray-700 text-md rounded-md hover:bg-gray-700 hover:text-white transition ease-linear duration-100">Report discrepancy</button>
+                    <button class="px-7 py-3 md:px-9 md:py-4 bg-white font-medium md:font-semibold text-gray-700 text-md rounded-md hover:bg-gray-700 hover:text-white transition ease-linear duration-100">Learn more</button>
                 </nav>
 
                 <div class="text-center">
@@ -33,17 +42,17 @@
                     </div>
 
                     <p style="color: rgb(47, 77, 70);" class="font-normal text-md md:text-xl mb-4">
-                        {% if future_event_flag %}
-                            On {{ current_event_date }}, Gurudev would be coming to
+                        {% if events_data.main_event.is_future %}
+                            On {{ events_data.main_event.begin }}, Gurudev would be coming to
                         {% else %}
-                            Gurudev is currently gracing
+                        <strong>Today | {{ events_data.main_event.begin }}</strong> <br /> Gurudev is currently gracing
                         {% endif %}
                     </p>
 
-                    <h1 style="color: rgb(255, 102, 0);" class="font-normal text-gray-900 text-4xl md:text-7xl leading-none mb-8">{{ location }}</h1>
+                    <h1 style="color: rgb(255, 102, 0);" class="font-normal text-gray-900 text-4xl md:text-7xl leading-none mb-8">{{ events_data.main_event.city }}</h1>
 
 
-                    <p style="color: rgb(47, 77, 70);" class="font-normal text-gray-600 text-md md:text-xl mb-16">{{ full_location }}
+                    <p style="color: rgb(47, 77, 70);" class="font-normal text-gray-600 text-md md:text-xl mb-16">{{ events_data.main_event.address }}
 </p>
 
                     <!-- <a href="#" class="px-7 py-3 md:px-9 md:py-4 font-medium md:font-semibold bg-gray-700 text-gray-50 text-sm rounded-md hover:bg-gray-50 hover:text-gray-700 transition ease-linear duration-500">Like</a> -->
@@ -101,45 +110,23 @@
                     <div class="mb-10 lg:mb-0">
                         <h1 class="font-medium text-gray-700 text-3xl md:text-4xl mb-5">Upcoming visits</h1>
 
-                        <p class="font-normal text-gray-500 text-xs md:text-base">Art of Living International Center, 21st km Kanakapura Road, Udaypura, Bengaluru, Karnataka, India</p>
+                        <p class="font-normal text-gray-500 text-xs md:text-base">Glimpse into the forthcoming journey of <strong>Gurudev</strong></p>
                     </div>
 
                     <div class="space-y-24">
-                        <div class="flex space-x-6">
-                            <h1 class="font-normal text-gray-700 text-3xl md:text-4xl">01-03-2024</h1>
+                        {% for event in events_data.upcoming_events %}
+                            <div class="flex space-x-6">
+                                <h1 class="font-normal text-gray-700 text-3xl md:text-4xl">{{ event.begin }}</h1>
 
-                            <span class="w-28 h-0.5 bg-gray-300 mt-5"></span>
+                                <span class="w-28 h-0.5 bg-gray-300 mt-5"></span>
 
-                            <div>
-                                <h1 class="font-normal text-gray-700 text-3xl md:text-4xl mb-5">Bengaluru, Karnataka, India</h1>
-
-                                <p class="font-normal text-gray-500 text-sm md:text-base">Art of Living International Center, 21st km Kanakapura Road, Udaypura, Bengaluru, Karnataka, India</p>
+                                <div>
+                                    <h1 class="font-normal text-gray-700 text-3xl md:text-4xl mb-5">{{ event.city }}</h1>
+                                    <h3 class="font-medium text-gray-700 text-lg mb-4">{{ event.name }}</h4>
+                                    <p class="font-normal text-gray-500 text-sm md:text-base">{{ event.address }}</p>
+                                </div>
                             </div>
-                        </div>
-                        
-                        <div class="flex space-x-6">
-                            <h1 class="font-normal text-gray-700 text-3xl md:text-4xl">03-03-2024</h1>
-
-                            <span class="w-28 h-0.5 bg-gray-300 mt-5"></span>
-
-                            <div>
-                                <h1 class="font-normal text-gray-700 text-3xl md:text-4xl mb-5">Taiwan</h1>
-
-                                <p class="font-normal text-gray-500 text-sm md:text-base">Art of Living International Center, 21st km Kanakapura Road, Udaypura, Bengaluru, Karnataka, India</p>
-                            </div>
-                        </div>
-
-                        <div class="flex space-x-6">
-                            <h1 class="font-normal text-gray-700 text-3xl md:text-4xl">03-10-2024</h1>
-
-                            <span class="w-28 h-0.5 bg-gray-300 mt-5"></span>
-
-                            <div>
-                                <h1 class="font-normal text-gray-700 text-3xl md:text-4xl mb-5">Bengaluru, Karnataka, India</h1>
-
-                                <p class="font-normal text-gray-500 text-sm md:text-base">Art of Living International Center, 21st km Kanakapura Road, Udaypura, Bengaluru, Karnataka, India</p>
-                            </div>
-                        </div>
+                        {% endfor %}
                     </div>
                 </div>
 
@@ -386,7 +373,7 @@
                 <div class="text-center">
                     <h1 class="font-medium text-gray-700 text-4xl md:text-5xl mb-5">Find Gurudev</h1>
 
-                    <p class="font-normal text-gray-400 text-md md:text-lg mb-20">This website is purely for helping find people Gurudev's publically known visits</p>
+                    <p class="font-normal text-gray-400 text-md md:text-lg mb-20">This website is dedicated to providing information on the publicly announced visits of Gurudev, <br /> facilitating easy access for anyone seeking Gurudev's visits.</p>
 
                     <!-- <div class="flex items-center justify-center space-x-8">
                         <a href="#" class="w-16 h-16 flex items-center justify-center rounded-full hover:bg-gray-200 transition ease-in-out duration-500">
