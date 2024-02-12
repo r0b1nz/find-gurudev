@@ -78,7 +78,7 @@ def get_events_to_show(date_to_check):
                 'name': event['name'],
                 'address': event['address'],
                 'city': event['city'],
-                'begin': event['begin'].strftime('%B %d, %Y'),
+                'begin': date_to_check_main_event_for.strftime('%B %d, %Y'),
                 'is_future': False
             }
             found_main_event = True
